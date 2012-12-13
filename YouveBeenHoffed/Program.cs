@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.ComponentModel;
 using System.Net;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace YouveBeenHoffed
@@ -76,7 +77,17 @@ REMARKS
             if (Uri.IsWellFormedUriString(path, UriKind.Absolute))
             {
                 tempFile = Path.GetTempFileName();
-                try {new WebClient().DownloadFile(path, tempFile);}catch{throw new WebException("Failed to download "+ path);}
+                try
+                {
+                    Console.WriteLine("Downloading image...");
+                    new WebClient().DownloadFile(path, tempFile);
+                }
+                catch
+                {
+                    Console.WriteLine("Failed to download "+ path);
+                    Console.WriteLine("Using default image instead.");
+                    tempFile = GetEmbeddedImagePath();
+                }
                 path = tempFile;
             }
 
@@ -92,6 +103,17 @@ REMARKS
         {
             var path = GetRandomPic();
             return SetDesktopWallpaper(path);
+        }
+
+        public string GetEmbeddedImagePath()
+        {
+            var temp = Path.GetTempFileName();
+            using (Stream input = Assembly.GetExecutingAssembly().GetManifestResourceStream("YouveBeenHoffed.hasselhoff_1024.jpg"))
+            using (Stream output = File.Create(temp))
+            {
+                if (input != null) input.CopyTo(output);
+            }
+            return temp;
         }
 
         private void ValidatePath(string path)
